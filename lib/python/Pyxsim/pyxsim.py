@@ -245,8 +245,13 @@ class SimThreadImpl(threading.Thread):
         self.resume_condition = lambda x: False
         self.complete_event.set()
 
-        # Must "Terminate" this thread when driving the RTL simulation - nothing else calls this function so call it here
-        self.terminate()
+        # This environment variable is set when running in the RTL "xregress" test environment
+        rtl_xsi = os.environ.get("XSI_ENDPOINT")
+        if rtl_xsi:
+            # Must "Terminate" this thread when driving the RTL simulation otherwise the session hangs
+            #  - nothing else calls this function so call it here
+            # Do not call this when running an xsim session, because the xsim VCD traces are truncated prematurely
+            self.terminate()
 
 class XsiBase:
     @staticmethod
@@ -278,12 +283,13 @@ class XsiBase:
 
         self.xe = Xe(self.xe_path)
 
+        # This environment variable is set when running in the RTL "xregress" test environment
         rtl_xsi = os.environ.get("XSI_ENDPOINT")
         if rtl_xsi:
             # For xsim the XSI clock() method "runs" at the same frequency as the tile frequency (600 MHz - extracted from the XE)
             # For RTL - we need to set self.xe.freq = 1000, the frequency at which the test bench is clocking the XSI interface
             # (and when the XE is built in the xregress flow, the embedded frequency is 400 MHz)
-            # TODO - pass this frequency on cmd line or as another env var - for example PYTEST_RTL_XSI_FREQUENCY
+            # A possible enhancement - pass this frequency on cmd line or as another env var - for example PYTEST_RTL_XSI_FREQUENCY
             #
             # Override the frequency "defined" whhen the XE was built
             self.xe.freq = 1000
