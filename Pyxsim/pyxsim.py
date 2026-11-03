@@ -316,7 +316,7 @@ class XsiBase:
         simthread.complete_event.wait()
         simthread.complete_event.clear()
         if simthread.had_exception:
-            raise TestError("Simthread encoutered an exception")
+            raise TestError("Simthread encountered an exception")
 
     def clock(self):
         status = self._clock()
@@ -333,6 +333,19 @@ class XsiBase:
                         return XsiStatus.DONE
 
         return status
+
+    def get_result(self):
+        """
+        Returns the simulation result from xsim (exit code or exception type)
+        This is a newer method so may not exist on older versions of the library
+        """
+        if not hasattr(xsi_lib, "xsi_get_result"):
+            return 0
+
+        c_value = c_uint()
+        status = xsi_lib.xsi_get_result(self.xsim, byref(c_value))
+        XsiStatus.error_if_not_valid(status)
+        return c_value.value
 
     def get_time(self):
         """
@@ -435,6 +448,10 @@ class Xsi(XsiBase):
 
     def _clock(self):
         return xsi_lib.xsi_clock(self.xsim)
+
+        result = self.get_result()
+        if result != 0:
+            raise TestError(f"Simulation returned non-zero result: {result}")
 
     def terminate(self):
         status = xsi_lib.xsi_terminate(self.xsim)
