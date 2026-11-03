@@ -255,7 +255,7 @@ RTL simulation.
 The RTL verification environment will wait for the launched process to
 terminate. A process exit code of 0 indicates success, and a non-0 code
 inidicates failure. Timeouts are managed by the RTL verification environment
- - it may kill the lauched process when any of its timeouts expire.
+and it may kill the lauched process when any of its timeouts expire.
 
 The XSI RTL verification environment runs with a granularity of 1 nanosecond.
 This means that each call to XSI clock() will run the simulation for a period
